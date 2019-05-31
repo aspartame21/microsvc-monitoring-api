@@ -23,7 +23,7 @@ app.get('/api/v1/healthz/:service', async (req, res) => {
 app.listen(process.env.NODE_PORT || 6767, () => console.log('Listening on 6767'));
 
 function badgify(label, message, color) {
-  return `https://img.shields.io/badge/${label.replaceAll('-', '--')}-${message.replaceAll('-', '--')}-${color}.svg`;
+  return `https://img.shields.io/badge/${label.replace(/-/g, '--')}-${message.replace(/-/g, '--')}-${color}.svg`;
 }
 
 function getService(service, cb) {
