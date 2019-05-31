@@ -4,11 +4,18 @@ const app = express();
 
 const LABEL_SELECTOR = "com.docker.compose.service";
 
-app.get('/api/v1/health/:service', async (req, res) => {
+app.get('/api/v1/healthz/:service', async (req, res) => {
   const service = req.params.service;
-  getService(service, container => { 
+  const badge = req.query.badge;
+  res.setHeader('X-Powered-By', 'Nijat');
+  getService(service, container => {
     container = JSON.parse(container);
     const state = container.length !== 0 ? container[0].State : "N/A";
+    if (typeof badge === "undefined") {
+      res.append('Content-Type', 'application/json');
+      res.send({ name: service, state });
+      return;
+    }
     state === "running" ? res.redirect(badgify(service, state, 'brightgreen')) : res.redirect(badgify(service, state, 'red'));
   });
 });
@@ -16,7 +23,7 @@ app.get('/api/v1/health/:service', async (req, res) => {
 app.listen(process.env.NODE_PORT || 6767, () => console.log('Listening on 6767'));
 
 function badgify(label, message, color) {
-  return `https://img.shields.io/badge/${label.replace('-','--')}-${message.replace('-','--')}-${color}.svg`;
+  return `https://img.shields.io/badge/${label.replace('-', '--')}-${message.replace('-', '--')}-${color}.svg`;
 }
 
 function getService(service, cb) {
