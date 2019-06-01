@@ -1,8 +1,8 @@
-const express = require('express');
-const http = require('http');
-const app = express();
+const { getService } = require("./docker-sdk");
+const { badgify } = require("./badgify");
 
-const LABEL_SELECTOR = "com.docker.compose.service";
+const express = require('express');
+const app = express();
 
 app.get('/api/v1/healthz/:service', async (req, res) => {
   const service = req.params.service;
@@ -16,23 +16,14 @@ app.get('/api/v1/healthz/:service', async (req, res) => {
       res.send({ name: service, state });
       return;
     }
-    state === "running" ? res.redirect(badgify(service, state, 'brightgreen')) : res.redirect(badgify(service, state, 'red'));
+    res.writeHead(200, {
+      "Content-Type": "image/svg+xml"
+    });
+    state === "running"
+      ? res.write(badgify(service, state, 'brightgreen'))
+      : res.write(badgify(service, state, 'red'));
+    res.end();
   });
 });
 
 app.listen(process.env.NODE_PORT || 6767, () => console.log('Listening on 6767'));
-
-function badgify(label, message, color) {
-  return `https://img.shields.io/badge/${label.replace(/-/g, '--')}-${message.replace(/-/g, '--')}-${color}.svg`;
-}
-
-function getService(service, cb) {
-  http.request({
-    socketPath: '/var/run/docker.sock',
-    path: `/v1.24/containers/json?filters={"label":{"${LABEL_SELECTOR}=${service}":true}}`
-  }, res => {
-    res.setEncoding('utf-8');
-    res.on('data', data => cb(data));
-    res.on('err', err => cb(err));
-  }).end();
-}
