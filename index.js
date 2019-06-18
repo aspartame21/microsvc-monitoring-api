@@ -4,7 +4,7 @@ const { badgify } = require("./badgify");
 const express = require('express');
 const app = express();
 
-app.get('/api/v1/healthz/:service', async (req, res) => {
+app.get('/api/v1/healthz/:namespace/:service', async (req, res) => {
   const service = req.params.service;
   const badge = req.query.badge;
   res.setHeader('X-Powered-By', 'Nijat');
